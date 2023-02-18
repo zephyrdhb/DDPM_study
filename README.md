@@ -113,5 +113,3 @@ def get_params_grad_l2(model):
         params_grads.append(parms.grad.norm())
     return params_names,params_grads
 ```
-
-[image-20230217223154115](C:\Users\z\AppData\Roaming\Typora\typora-user-images\image-20230217223154115.png)
