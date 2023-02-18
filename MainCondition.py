@@ -1,7 +1,6 @@
 from DiffusionFreeGuidence.TrainCondition import train, eval
 
 
-# a
 def main(model_config=None):
     modelConfig = {
         "state": "train",  # or eval
