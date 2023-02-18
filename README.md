@@ -1,10 +1,4 @@
-# DenoisingDiffusionProbabilityModel
-由项目 https://github.com/zoubohao/DenoisingDiffusionProbabilityModel-ddpm- 修改而来 <br>
-<br>
-添加了并行运算、获取中间变量(即隐层特征表示)梯度信息、获取中间层权重梯度信息。
-<br>
-<br>
-## 使用torch.distributed模块将代码改造成并行计算
+## 一、使用torch.distributed模块将代码改造成并行计算
 
 #####  1.直接使用torch.distributed 必须通过执行如下命令才能启动并行运算。
 
@@ -28,7 +22,7 @@ args = parser.parse_args()
 mp.spawn(main, nprocs=1, args=(1, args))
 ```
 
-##### 3.在main函数中需要加入如下代码，用来定义当前分布式环境的一些参数。
+##### 3.在mian函数中需要加入如下代码，用来定义当前分布式环境的一些参数。
 
 ```python
 import torch.distributed as dist
@@ -43,15 +37,14 @@ torch.cuda.set_device(local_rank)
 ```python
 train_sampler = torch.utils.data.distributed.DistributedSampler(dataset)
 dataloader = DataLoader(
-dataset, batch_size=modelConfig["batch_size"], shuffle=True, num_workers=4, drop_last=True, pin_memory=True,sampler=train_sampler)
+dataset, batch_size=modelConfig["batch_size"], num_workers=4, drop_last=True, pin_memory=True,sampler=train_sampler)
 
 net_model = UNet(T=modelConfig["T"], num_labels=10, ch=modelConfig["channel"], ch_mult=modelConfig["channel_mult"],num_res_blocks=modelConfig["num_res_blocks"], dropout=modelConfig["dropout"])
 net_model = net_model.cuda(local_rank)
-net_model = torch.nn.parallel.DistributedDataParallel(net_model, device_ids=[local_rank],
-                                                          output_device=[local_rank])
+net_model = torch.nn.parallel.DistributedDataParallel(net_model, device_ids=[local_rank],)
 ```
 
-## 实现函数,整合进代码框架中, 功能为可以选择并查看反向传播过程中的非叶子张量(计算图的中间变量)的梯度(提升:可以使用torch.nn中的Hook方法).
+## 二、实现函数,整合进代码框架中, 功能为可以选择并查看反向传播过程中的非叶子张量(计算图的中间变量)的梯度(提升:可以使用torch.nn中的Hook方法).
 
 
 
@@ -62,7 +55,8 @@ model = UNet(xxx)
 
 # 由于model中有双层封装，因此通过两个循环遍历读取里面的block，给各个block层注册反向传播hook。
 # 这块为注册内容，需放在模型构建完成后、开始训练前。
-for i, v in model.named_children():
+# 为并行运算，模型为DistributedDataParallel，所以需要对model.module进行遍历
+for i, v in model.module.named_children():
 	for j, v1 in v.named_children():
 		v1.register_backward_hook(hook=backward_hook)
         
@@ -99,7 +93,8 @@ def clear_hook_grad():
 
 <div style="page-break-after: always;"></div>
 
-## 实现函数,整合进代码框架中, 功能为可以选择并查看任意一步反向传播中**模型参数的梯度**(例如某个线性层的梯度,卷积层的梯度),并返回梯度的L2 norm.
+
+## 三、实现函数,整合进代码框架中, 功能为可以选择并查看任意一步反向传播中**模型参数的梯度**(例如某个线性层的梯度,卷积层的梯度),并返回梯度的L2 norm.
 
 ##### 1.在loss.backward()进行反向传播计算梯度后，可以直接通过遍历models.named_parameters()，使用 params.grad获得各层参数的梯度。
 
@@ -113,3 +108,6 @@ def get_params_grad_l2(model):
         params_grads.append(parms.grad.norm())
     return params_names,params_grads
 ```
+
+##### 2.运行结果 params_grads包含了各层权重的梯度信息的l2范数
+
