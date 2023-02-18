@@ -99,14 +99,6 @@ def clear_hook_grad():
 
 <div style="page-break-after: always;"></div>
 
-##### 2.主要代码如图
-
-![image-20230217220919326](C:\Users\z\AppData\Roaming\Typora\typora-user-images\image-20230217220919326.png)
-
-##### 3.运行结果 其中包含了各个层的输入变量的梯度信息，输出变量的梯度信息同理
-
-![image-20230217223058203](C:\Users\z\AppData\Roaming\Typora\typora-user-images\image-20230217223058203.png)
-
 ## 实现函数,整合进代码框架中, 功能为可以选择并查看任意一步反向传播中**模型参数的梯度**(例如某个线性层的梯度,卷积层的梯度),并返回梯度的L2 norm.
 
 ##### 1.在loss.backward()进行反向传播计算梯度后，可以直接通过遍历models.named_parameters()，使用 params.grad获得各层参数的梯度。
@@ -122,6 +114,4 @@ def get_params_grad_l2(model):
     return params_names,params_grads
 ```
 
-##### 2.运行结果 params_grads包含了各层权重的梯度信息的l2范数
-
-![image-20230217223154115](C:\Users\z\AppData\Roaming\Typora\typora-user-images\image-20230217223154115.png)
+[image-20230217223154115](C:\Users\z\AppData\Roaming\Typora\typora-user-images\image-20230217223154115.png)
