@@ -28,7 +28,7 @@ args = parser.parse_args()
 mp.spawn(main, nprocs=1, args=(1, args))
 ```
 
-##### 3.在mian函数中需要加入如下代码，用来定义当前分布式环境的一些参数。
+##### 3.在main函数中需要加入如下代码，用来定义当前分布式环境的一些参数。
 
 ```python
 import torch.distributed as dist
