@@ -109,5 +109,4 @@ def get_params_grad_l2(model):
     return params_names,params_grads
 ```
 
-##### 2.运行结果 params_grads包含了各层权重的梯度信息的l2范数
 
